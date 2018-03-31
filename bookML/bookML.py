@@ -1,65 +1,122 @@
-#test
-"""
-import timeit
-normal_py_sec = timeit.timeit('sum(x*x for x in range(1000))', number=10000)
-naive_np_sec = timeit.timeit('sum(na*na)', 
-                             setup="import numpy as np; na=np.arange(1000)",
-                             number=10000)
-good_np_sec = timeit.timeit('na.dot(na)',
-                            setup="import numpy as np; na=np.arange(1000)",
-                            number=10000)
-print ("Normal Python: %f sec" % normal_py_sec)
-print ("Naive NumPy: %f sec" % naive_np_sec)
-print ("Good NumPy: %f sec" % good_np_sec)
-"""
+from matplotlib import pyplot as plt
+import numpy as np
 
-import scipy as sp
-import matplotlib.pyplot as plt
+from sklearn.datasets import load_iris
+data = load_iris()
 
-def error (f, x, y):
-    return sp.sum((f(x)-y)**2)
+features = data.data
+feature_names = data.feature_names
+target = data.target
+target_names = data.target_names
 
-data = sp.genfromtxt("web_traffic.tsv", delimiter="\t")
+print(target)
+print(target_names)
+#print(features, features.size)
 
-print(data[:10])
-print(data.shape)
 
-x = data[:,0]       #нумерация записей
-y = data[:,1]       #данные
+for t in range(3):
+    if t == 0:
+        c = 'r'
+        marker = '>'
+    elif t == 1:
+        c = 'g'
+        marker = 'o'
+    elif t == 2:
+        c = 'b'
+        marker = 'x'
+    plt.scatter(features[target == t, 2],
+                features[target == t, 3],
+                marker=marker,
+                c=c)
 
-print("количество NaN",sp.sum(sp.isnan(y)))
+labels = target_names[target]
+plength = features[:, 2]                    #petal lenth is feature pos. 2
+is_setosa = (labels == "setosa")            #create boolean massive
+max_setosa = plength[is_setosa].max()       #
+min_non_setosa = plength[~is_setosa].min()
 
-x = x[~sp.isnan(y)]
-y = y[~sp.isnan(y)]
-
-inflection = int(3.5*7*24)
-xa = x[:inflection]
-ya = y[:inflection]
-xb = x[inflection:]
-yb = y[inflection:]
-
-fa = sp.poly1d(sp.polyfit(xa, ya, 1))
-fb = sp.poly1d(sp.polyfit(xb, yb, 1))
-
-fa_error = error(fa, xa, ya)
-fb_error = error(fb, xb, yb)
-
-fax = sp.linspace(0, xa[-1], 1000)
-fbx = sp.linspace(0, xb[-1], 1000)
-
-print("Error inflections=%f" % (fa_error+fb_error))
-
-plt.scatter(x, y, s=10)
-plt.title("Web traffic over the last month")
-plt.xlabel("Time")
-plt.ylabel("Hits/hour")
-plt.xticks([w*7*24 for w in range (10)],
-           ['week %i' % w for w in range(10)])
-plt.autoscale(tight=True)
-plt.grid(True, linestyle='-', color='0.75')
-###################################################################
-plt.plot(fax, fa(fax), linewidth=3, color='0.25')
-plt.plot(fbx, fb(fbx), linewidth=3, color='0.45')
+print('maximum of setosa: {0}.'.format(max_setosa))
+print('minimum of others: {0}'.format(min_non_setosa))
 
 plt.show()
 
+plt.cla()
+plt.clf()
+
+
+####################################################################################
+
+features = features[~is_setosa]
+target = target[~is_setosa]
+#print(features, features.size)
+labels = labels[~is_setosa]
+#print(labels, labels.size)
+
+is_virginica = (labels == 'virginica')          #bool massive
+
+best_acc = -1.0
+#print(features.shape[1])                       #4
+
+
+print(features)
+print(target)
+
+
+
+for fi in range(features.shape[1]):                 #0 1 2 3 
+    thresh = features[:, fi]                        #rows 0 1 2 3 
+#   print(thresh)
+    for t in thresh:                                #for row
+        feature_i = features[:, fi]                 #all in row
+        pred = (feature_i > t)                      #bool, True if current item (t) less than item in the actual row 
+        acc = (pred == is_virginica).mean()         #совпадение порога с вирджиникой
+        rev_acc = (pred == ~is_virginica).mean()    #с не вирджиникой
+        if rev_acc > acc:                           #условие хранит понимание порога вирджиники или не вирджиники?
+            reverse = True
+            acc = rev_acc
+        else:
+            reverse = False
+
+        if acc > best_acc:
+            best_acc = acc
+            best_fi = fi
+            best_t = t
+            best_reverse = reverse
+
+print('accuracy: ', best_acc, ', feature number: ', best_fi, ', feature currency: ',best_t)
+
+def is_virginica_test (fi, t, reverse, example):
+    "Apply threshold model to a new example"
+    test = example[fi] > t
+    if reverse:
+        test = not test
+    return test
+
+
+for t in range(3):
+    if t == 0:
+        c = 'r'
+        marker = '>'
+    elif t == 1:
+        c = 'g'
+        marker = 'x'
+    elif t == 2:
+        c = 'b'
+        marker = 'o'
+    plt.scatter(features[target == t, 3],
+                features[target == t, 2],
+                marker=marker,
+                c=c)
+
+plt.vlines(best_t, 0, 7)
+plt.show()
+"""
+correct = 0.0
+for ei in range(len(features)):
+    training = np.ones(len(features), bool)
+    training[ei] = false
+    testing = ~training
+    model =
+    
+
+"""
